@@ -376,8 +376,7 @@
 
         document.getElementById('reset-btn').addEventListener('click', (e) => {
             e.stopPropagation(); card.classList.remove('revealed');
-            setTimeout(() => { lDisp.innerHTML=""; sDisp.innerText=""; iDisp.innerText=""; iDisp.scrollTop = 0; current = null; }, 400);
-        });
+       });
 
         function getCleanBgSnapshot() {
             const tempCanvas = document.createElement('canvas'); tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -404,10 +403,10 @@
             container.style.backgroundImage = `url(${cleanBg})`; container.style.backgroundSize = 'cover';
             container.innerHTML = `
                 <div style="text-align: center; margin-bottom: 60px; width: 100%;"><div style="font-family: 'Montserrat'; font-size: 36px; letter-spacing: 0.8em; color: ${textColor}; text-indent: 0.8em; opacity: 0.8;">RESONANCE</div></div>
-                <div style="width: 920px; height: 1050px; background: ${cardBg}; backdrop-filter: blur(25px); padding: 80px; border-radius: 50px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; position: relative;">
+                <div style="width: 920px; height: 1050px; background: ${cardBg}; backdrop-filter: blur(5px); padding: 80px; border-radius: 50px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; position: relative;">
                     <div style="position: relative; padding: 40px 0;">
-                        <div style="font-family: 'LXGW WenKai TC'; font-size: 80px; color: ${quoteColor}; position: absolute; top: 0; left: -20px; font-weight: 400;">「</div>
-                        <div style="font-family: 'LXGW WenKai TC'; font-size: 52px; line-height: 1.8; text-align: center; color: ${textColor}; position: relative; z-index: 2; padding: 0 40px;">${current.t}</div>
+                        <div style="font-family: 'LXGW WenKai TC'; font-size: 80px; color: ${quoteColor}; position: absolute; top: 0; left: 0; font-weight: 400;">「</div>
+                        <div style="font-family: 'LXGW WenKai TC'; font-size: 40px; line-height: 1.8; text-align: center; color: ${textColor}; position: relative; z-index: 2; padding: 0 40px;">${current.t}</div>
                         <div style="font-family: 'LXGW WenKai TC'; font-size: 80px; color: ${quoteColor}; position: absolute; bottom: 0; right: -20px; font-weight: 400;">」</div>
                     </div>
                     <div style="font-family: 'LXGW WenKai TC'; font-size: 28px; color: #888; text-align: center; margin-top: 60px;">《${current.s}》</div>
@@ -460,56 +459,6 @@ ready');
         loader.style.opacity = '0';
         loader.style.visibility = 'hidden';
     }, 500); 
-});
-// 1. 在原本這行底下，多加一個 resetTimer 變數
-let current = null;
-let resetTimer = null; // 【新增】用來記錄清空指令的計時器
-
-// 2. 修改卡片的點擊事件
-card.addEventListener('click', (e) => {
-    if (e.target.closest('.btn') || card.classList.contains('revealed')) return;
-    
-    // 【新增】如果卡片再次被點擊時，還有未執行的清空指令，就馬上取消它
-    if (resetTimer) {
-        clearTimeout(resetTimer);
-        resetTimer = null;
-    }
-
-    triggerHaptic();
-    current = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
-    
-    const charCount = current.t.replace(/<br>/g, '').length;
-    if(charCount > 60) {
-        lDisp.style.fontSize = '0.8rem';
-        lDisp.style.lineHeight = '1.5';
-    } else if (charCount > 40) {
-        lDisp.style.fontSize = '0.92rem';
-        lDisp.style.lineHeight = '1.6';
-    } else {
-        lDisp.style.fontSize = '1.1rem';
-        lDisp.style.lineHeight = '1.7';
-    }
-    
-    lDisp.innerHTML = current.t; 
-    sDisp.innerText = "《" + current.s + "》"; 
-    iDisp.innerText = current.i;
-    iDisp.scrollTop = 0;
-    card.classList.add('revealed');
-});
-
-// 3. 修改「再次共振」按鈕的點擊事件
-document.getElementById('reset-btn').addEventListener('click', (e) => {
-    e.stopPropagation(); 
-    card.classList.remove('revealed');
-    
-    // 【修改】將 setTimeout 存入 resetTimer 變數中
-    resetTimer = setTimeout(() => { 
-        lDisp.innerHTML=""; 
-        sDisp.innerText=""; 
-        iDisp.innerText=""; 
-        iDisp.scrollTop = 0; 
-        current = null; 
-    }, 400);
 });
     </script>
 </body>
