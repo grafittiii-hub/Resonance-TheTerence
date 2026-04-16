@@ -426,7 +426,7 @@ const card = document.getElementById('main-card');
     
     if (textLength > 60) {
         downloadFontSize = '34px'; 
-    } else if (textLength > 40) {
+    } else if (textLength > 23) {
         downloadFontSize = '40px';
     } else {
         downloadFontSize = '50px';
@@ -440,17 +440,28 @@ const card = document.getElementById('main-card');
                         container.style.backgroundImage = `url(${cleanBg})`; container.style.backgroundSize = 'cover';
 
             container.innerHTML = `
-                <div style="text-align: center; margin-bottom: 60px; width: 100%;"><div style="font-family: 'Montserrat'; font-size: 36px; letter-spacing: 0.8em; color: ${textColor}; text-indent: 0.8em; opacity: 0.8;">RESONANCE</div></div>
-                <div style="width: 920px; height: 1050px; background: ${cardBg}; backdrop-filter: blur(25px); padding: 80px; border-radius: 50px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; position: relative;">
-                    <div style="position: relative; padding: 40px 0;">
-                        <div style="font-family: 'LXGW WenKai TC'; font-size:70px; color: ${quoteColor}; position: absolute; top: 0; left: -25px; font-weight: 400;">「</div>
-                        <div style="font-family: 'LXGW WenKai TC'; font-size: ${downloadFontSize}; line-height: 1.8; text-align: center; color: ${textColor}; position: relative; z-index: 2; padding: 0 50px;">${current.t}</div>
-                        <div style="font-family: 'LXGW WenKai TC'; font-size: 70px; color: ${quoteColor}; position: absolute; bottom: 0; right: -25px; font-weight: 400;">」</div>
-                    </div>
-                    <div style="font-family: 'LXGW WenKai TC'; font-size: 28px; color: #888; text-align: center; margin-top: 60px;">《${current.s}》</div>
-                    <div style="position: absolute; bottom: 50px; right: 60px; display: flex; flex-direction: column; align-items: center; gap: 10px;"><img src="${qrCodeData}" style="width: 100px; height: 100px; opacity: 0.8;" /><span style="font-family: 'Montserrat'; font-size: 14px; color: #888;">SCAN TO LISTEN</span></div>
-                </div>
-            `;
+    <div style="text-align: center; margin-bottom: 40px; width: 100%;">
+        <div style="font-family: 'Montserrat'; font-size: 36px; letter-spacing: 0.8em; color: ${textColor}; text-indent: 0.8em; opacity: 0.8;">RESONANCE</div>
+        <div style="font-family: 'LXGW WenKai TC'; font-size: 20px; letter-spacing: 0.2em; color: ${textColor}; opacity: 0.6; margin-top: 15px;">共鳴歌詞 · 泰倫斯Terence</div>
+    </div>
+
+    <div style="width: 920px; height: 1050px; background: ${cardBg}; backdrop-filter: blur(25px); padding: 100px 80px 80px 80px; border-radius: 50px; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; position: relative;">
+        
+        <div style="position: relative; padding: 40px 0;">
+            <div style="font-family: 'LXGW WenKai TC'; font-size:70px; color: ${quoteColor}; position: absolute; top: 0; left: -25px; font-weight: 400;">「</div>
+            <div style="font-family: 'LXGW WenKai TC'; font-size: ${downloadFontSize}; line-height: 1.8; text-align: center; color: ${textColor}; position: relative; z-index: 2; padding: 0 50px;">${current.t}</div>
+            <div style="font-family: 'LXGW WenKai TC'; font-size: 70px; color: ${quoteColor}; position: absolute; bottom: 0; right: -25px; font-weight: 400;">」</div>
+        </div>
+
+        <div style="font-family: 'LXGW WenKai TC'; font-size: 28px; color: #888; text-align: center; margin-top: 40px;">《${current.s}》</div>
+
+        <div style="position: absolute; bottom: 50px; right: 60px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <img src="${qrCodeData}" style="width: 100px; height: 100px; opacity: 0.8;" />
+            <span style="font-family: 'Montserrat'; font-size: 14px; color: #888;">SCAN TO LISTEN</span>
+        </div>
+    </div>
+`;
+
             try {
                 await new Promise(r => setTimeout(r, 600));
                 const canvasOut = await html2canvas(container, { scale: 2, useCORS: true });
