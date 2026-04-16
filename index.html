@@ -450,6 +450,10 @@ waitForFonts().then(() => {
     const loader = document.getElementById('initial-loader');
     // 1. 給 body 加上標記，觸發 CSS 的淡入動畫
     document.body.classList.add('fonts-ready');
+ready');
+    
+    // 【新增這行】立刻讓載入層無法被點擊，不再當隱形盾牌
+    loader.style.pointerEvents = 'none';
     
     // 2. 延遲 0.5秒後完全移除 loading 層（配合 opacity 動畫時間）
     setTimeout(() => {
@@ -457,7 +461,56 @@ waitForFonts().then(() => {
         loader.style.visibility = 'hidden';
     }, 500); 
 });
+// 1. 在原本這行底下，多加一個 resetTimer 變數
+let current = null;
+let resetTimer = null; // 【新增】用來記錄清空指令的計時器
 
+// 2. 修改卡片的點擊事件
+card.addEventListener('click', (e) => {
+    if (e.target.closest('.btn') || card.classList.contains('revealed')) return;
+    
+    // 【新增】如果卡片再次被點擊時，還有未執行的清空指令，就馬上取消它
+    if (resetTimer) {
+        clearTimeout(resetTimer);
+        resetTimer = null;
+    }
+
+    triggerHaptic();
+    current = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
+    
+    const charCount = current.t.replace(/<br>/g, '').length;
+    if(charCount > 60) {
+        lDisp.style.fontSize = '0.8rem';
+        lDisp.style.lineHeight = '1.5';
+    } else if (charCount > 40) {
+        lDisp.style.fontSize = '0.92rem';
+        lDisp.style.lineHeight = '1.6';
+    } else {
+        lDisp.style.fontSize = '1.1rem';
+        lDisp.style.lineHeight = '1.7';
+    }
+    
+    lDisp.innerHTML = current.t; 
+    sDisp.innerText = "《" + current.s + "》"; 
+    iDisp.innerText = current.i;
+    iDisp.scrollTop = 0;
+    card.classList.add('revealed');
+});
+
+// 3. 修改「再次共振」按鈕的點擊事件
+document.getElementById('reset-btn').addEventListener('click', (e) => {
+    e.stopPropagation(); 
+    card.classList.remove('revealed');
+    
+    // 【修改】將 setTimeout 存入 resetTimer 變數中
+    resetTimer = setTimeout(() => { 
+        lDisp.innerHTML=""; 
+        sDisp.innerText=""; 
+        iDisp.innerText=""; 
+        iDisp.scrollTop = 0; 
+        current = null; 
+    }, 400);
+});
     </script>
 </body>
 </html>
