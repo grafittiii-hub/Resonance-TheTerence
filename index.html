@@ -116,7 +116,7 @@
             box-shadow: 0 25px 70px rgba(0,0,0,0.06); 
             display: flex; flex-direction: column; padding: 35px 28px 25px 28px; box-sizing: border-box;
             transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), background 0.8s; 
-            position: relative; cursor: pointer; overflow: hidden;
+            position: relative; cursor: default; overflow: hidden;
         }
 /* Footer 美學設計 */
 .footer-credits {
@@ -133,7 +133,25 @@
     pointer-events: none; /* 確保不會擋住底層點擊 */
 }
 
-        .placeholder-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; z-index: 5; transition: opacity 0.5s; }
+        .placeholder-container { 
+    position: absolute; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); /* 居中 */
+    
+    /* 這裡設定點擊感應範圍 */
+    width: 160px;  /* 稍微大於漣漪的 140px，讓使用者好點按 */
+    height: 160px; 
+    
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 20; 
+    cursor: pointer;
+    border-radius: 50%; /* 圓形感應區 */
+    
+}
+
         .placeholder-icon { font-size: 2.8rem; color: var(--star-color); animation: float 4s infinite ease-in-out; filter: drop-shadow(0 0 10px var(--star-color)); opacity: 0.8; }
 
 /* 定義波紋的形狀與起始點 */
@@ -162,7 +180,7 @@
         
         .lyrics-container { line-height: 1.6; text-align: center; letter-spacing: 0.05em; color: var(--text-main); position: relative; z-index: 2; width: 100%; word-break: break-word; }
         
-        .song-title { font-size: 0.65rem; color: var(--text-sub); letter-spacing: 0.05em; text-align: center; margin: 0 -15px 20px -15px; flex-shrink: 0; padding: 0px; line-height: 1.5; z-index: 5; word-break: keep-all; }
+        .song-title { font-size: 0.65rem; color: var(--text-sub); letter-spacing: 0.05em; text-align: center; margin: 20px -15px 20px -15px; flex-shrink: 0; padding: 0px; line-height: 1.5; z-index: 5; word-break: keep-all; }
         
         .insight-box { 
             font-size: 0.8rem; line-height: 1.65; color: var(--text-sub); text-align: justify; padding: 15px 0 10px 0; 
@@ -243,6 +261,8 @@
 
     <div id="export-container"></div>
     <div id="qr-hidden" style="display:none;"></div>
+
+
 
     <script>
         const canvas = document.getElementById('bg-canvas');
@@ -338,7 +358,8 @@
             { s: "DAY DAY BIRTHDAY", t: "想就一起<br>隨意地 高歌 報喜", i: "快樂不需要挑日子。只要當下的心境對了，隨時隨地都能歡唱。", u: "https://youtu.be/m1CWHt_R9Jk?si=iaB4MARCzYU8dxsv" }
         ];
 
-        const card = document.getElementById('main-card');
+const card = document.getElementById('main-card');
+        const placeholder = document.getElementById('placeholder');
         const lDisp = document.getElementById('lyrics-display');
         const sDisp = document.getElementById('song-display');
         const iDisp = document.getElementById('insight-display');
@@ -349,8 +370,10 @@
 
         function triggerHaptic() { if ("vibrate" in navigator) navigator.vibrate(15); }
 
-        card.addEventListener('click', (e) => {
-            if (e.target.closest('.btn') || card.classList.contains('revealed')) return;
+        placeholder.addEventListener('click', (e) => {
+// 阻止事件冒泡，避免觸發到外層可能存在的點擊
+    e.stopPropagation();
+            if (card.classList.contains('revealed')) return;
             triggerHaptic();
             current = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
             
@@ -468,11 +491,11 @@ waitForFonts().then(() => {
     // 【新增這行】立刻讓載入層無法被點擊，不再當隱形盾牌
     loader.style.pointerEvents = 'none'
 
-    // 2. 延遲 0.2秒後完全移除 loading 層（配合 opacity 動畫時間）
+    // 2. 延遲 0.5秒後完全移除 loading 層（配合 opacity 動畫時間）
     setTimeout(() => {
         loader.style.opacity = '0';
         loader.style.visibility = 'hidden';
-    }, 200); 
+    }, 500); 
 });
     </script>
 </body>
