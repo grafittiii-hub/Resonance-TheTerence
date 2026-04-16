@@ -19,7 +19,7 @@
     background-color: var(--bg-color);
     z-index: 9999; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    transition: opacity 1s ease-in-out, visibility 1s;
+    transition: opacity 1s ease-in-out, visibility 2s;
 }
 
 .loader-text {
@@ -121,7 +121,7 @@
 /* Footer 美學設計 */
 .footer-credits {
     position: absolute;
-    bottom: 20px; /* 距離底部距離 */
+    bottom: 15px; /* 距離底部距離 */
     width: 100%;
     text-align: center;
     font-family: 'Montserrat', sans-serif;
@@ -162,7 +162,7 @@
         
         .lyrics-container { line-height: 1.6; text-align: center; letter-spacing: 0.05em; color: var(--text-main); position: relative; z-index: 2; width: 100%; word-break: break-word; }
         
-        .song-title { font-size: 0.65rem; color: var(--text-sub); letter-spacing: 0.05em; text-align: center; margin: 0 -15 20 -15px; flex-shrink: 0; padding: 0 10px; line-height: 1.5; z-index: 5; }
+        .song-title { font-size: 0.65rem; color: var(--text-sub); letter-spacing: 0.05em; text-align: center; margin: 0 -15px 20px -15px; flex-shrink: 0; padding: 0px; line-height: 1.5; z-index: 5; word-break: keep-all; }
         
         .insight-box { 
             font-size: 0.8rem; line-height: 1.65; color: var(--text-sub); text-align: justify; padding: 15px 0 10px 0; 
@@ -376,7 +376,8 @@
 
         document.getElementById('reset-btn').addEventListener('click', (e) => {
             e.stopPropagation(); card.classList.remove('revealed');
-       });
+            setTimeout(() => { lDisp.innerHTML=""; sDisp.innerText=""; iDisp.innerText=""; iDisp.scrollTop = 0; current = null; }, 400);
+        });
 
         function getCleanBgSnapshot() {
             const tempCanvas = document.createElement('canvas'); tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -394,33 +395,34 @@
         downloadBtn.addEventListener('click', async (e) => {
             e.stopPropagation(); if (!current || downloadBtn.disabled) return;
             downloadBtn.disabled = true; load.style.display = 'flex';
+
+// --- 【😆關鍵優化】自動判斷圖片字級 ---
+    const textOnly = current.t.replace(/<br>/g, '');
+    const textLength = textOnly.length;
+    let downloadFontSize = '46px'; // 預設
+    
+    if (textLength > 60) {
+        downloadFontSize = '34px'; 
+    } else if (textLength > 40) {
+        downloadFontSize = '40px';
+    } else {
+        downloadFontSize = '50px';
+    }
+
             const cleanBg = getCleanBgSnapshot(); const qrCodeData = await generateQRCode(current.u);
             const container = document.getElementById('export-container');
             const textColor = isDark ? '#f0f0f0' : '#1a1a1a';
             const cardBg = isDark ? 'rgba(20, 20, 25, 0.9)' : 'rgba(255, 255, 255, 0.9)';
             const quoteColor = isDark ? 'rgba(0, 242, 255, 0.25)' : 'rgba(96, 165, 250, 0.25)';
-            
-            container.style.backgroundImage = `url(${cleanBg})`; container.style.backgroundSize = 'cover';
-            // 自動判定下載圖片的歌詞字體大小
-let downloadFontSize = '46px';
-const textLength = current.t.replace(/<br>/g, '').length;
+                        container.style.backgroundImage = `url(${cleanBg})`; container.style.backgroundSize = 'cover';
 
-if (textLength > 60) {
-    downloadFontSize = '36px'; // 字超多時縮小
-} else if (textLength > 40) {
-    downloadFontSize = '42px'; // 中等長度
-} else {
-    downloadFontSize = '52px'; // 短歌詞可以用原本的大字，比較震撼
-}
-
-// 接著在下面的 style 中引用 ${downloadFontSize}
             container.innerHTML = `
                 <div style="text-align: center; margin-bottom: 60px; width: 100%;"><div style="font-family: 'Montserrat'; font-size: 36px; letter-spacing: 0.8em; color: ${textColor}; text-indent: 0.8em; opacity: 0.8;">RESONANCE</div></div>
                 <div style="width: 920px; height: 1050px; background: ${cardBg}; backdrop-filter: blur(25px); padding: 80px; border-radius: 50px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; position: relative;">
                     <div style="position: relative; padding: 40px 0;">
-                        <div style="font-family: 'LXGW WenKai TC'; font-size: 80px; color: ${quoteColor}; position: absolute; top: 0; left: -25; font-weight: 400;">「</div>
-                        <div style="font-family: 'LXGW WenKai TC'; font-size: 40px; line-height: 1.8; text-align: center; color: ${textColor}; position: relative; z-index: 2; padding: 0 40px;">${current.t}</div>
-                        <div style="font-family: 'LXGW WenKai TC'; font-size: 80px; color: ${quoteColor}; position: absolute; bottom: 0; right: -25px; font-weight: 400;">」</div>
+                        <div style="font-family: 'LXGW WenKai TC'; font-size:70px; color: ${quoteColor}; position: absolute; top: 0; left: -25px; font-weight: 400;">「</div>
+                        <div style="font-family: 'LXGW WenKai TC'; font-size: ${downloadFontSize}; line-height: 1.8; text-align: center; color: ${textColor}; position: relative; z-index: 2; padding: 0 50px;">${current.t}</div>
+                        <div style="font-family: 'LXGW WenKai TC'; font-size: 70px; color: ${quoteColor}; position: absolute; bottom: 0; right: -25px; font-weight: 400;">」</div>
                     </div>
                     <div style="font-family: 'LXGW WenKai TC'; font-size: 28px; color: #888; text-align: center; margin-top: 60px;">《${current.s}》</div>
                     <div style="position: absolute; bottom: 50px; right: 60px; display: flex; flex-direction: column; align-items: center; gap: 10px;"><img src="${qrCodeData}" style="width: 100px; height: 100px; opacity: 0.8;" /><span style="font-family: 'Montserrat'; font-size: 14px; color: #888;">SCAN TO LISTEN</span></div>
@@ -462,16 +464,15 @@ waitForFonts().then(() => {
     const loader = document.getElementById('initial-loader');
     // 1. 給 body 加上標記，觸發 CSS 的淡入動畫
     document.body.classList.add('fonts-ready');
-ready');
-    
+
     // 【新增這行】立刻讓載入層無法被點擊，不再當隱形盾牌
-    loader.style.pointerEvents = 'none';
-    
-    // 2. 延遲 0.5秒後完全移除 loading 層（配合 opacity 動畫時間）
+    loader.style.pointerEvents = 'none'
+
+    // 2. 延遲 0.2秒後完全移除 loading 層（配合 opacity 動畫時間）
     setTimeout(() => {
         loader.style.opacity = '0';
         loader.style.visibility = 'hidden';
-    }, 500); 
+    }, 200); 
 });
     </script>
 </body>
