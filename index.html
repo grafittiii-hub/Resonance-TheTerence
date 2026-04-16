@@ -470,7 +470,7 @@ const card = document.getElementById('main-card');
                     const url = URL.createObjectURL(blob); 
                     const link = document.createElement('a'); 
                     link.href = url; 
-                    link.download = `Resonance_${current.s.substring(0,15)}.jpg`;
+                    link.download = `Resonance_${current.s.substring(0,15)}.png`;
                     
                     link.click(); showToast("已保存至相簿");
                 });
