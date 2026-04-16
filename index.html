@@ -47,11 +47,48 @@
 
         #bg-canvas { position: absolute; top: 0; left: 0; z-index: 0; }
 
-        .overlay {
-            position: relative; z-index: 10; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center;
-            box-sizing: border-box; pointer-events: none;
-            padding-top: 8vh; 
+       <style>
+    /* ... 保持之前的 CSS ... */
+
+    /* --- 關鍵點 1：字體加載完成後必須恢復點擊能力 --- */
+    .overlay {
+        position: relative; z-index: 10; width: 100%; height: 100%;
+        display: flex; flex-direction: column; align-items: center;
+        box-sizing: border-box; 
+        pointer-events: none; /* 初始關閉點擊 */
+        padding-top: 8vh;
+        opacity: 0; visibility: hidden; filter: blur(15px);
+        transition: opacity 1.5s ease, filter 1.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 1.5s;
+    }
+
+    .fonts-ready .overlay { 
+        opacity: 1; visibility: visible; filter: blur(0px); 
+        pointer-events: auto; /* 核心修正：字體好之後恢復點擊 */
+        transition: opacity 1.5s ease, filter 1.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0s;
+    }
+
+    /* --- 關鍵點 2：主頁星星容器需確保在卡片頂層 --- */
+    .placeholder-container { 
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+        display: flex; align-items: center; justify-content: center; 
+        z-index: 50; /* 提高層級，確保不會被 card-content 遮蓋點擊 */
+        cursor: pointer; /* 滑鼠移上去顯示手型 */
+        opacity: 0; 
+        transition: opacity 1s ease 0.5s; 
+    }
+    
+    .fonts-ready .placeholder-container { opacity: 0.8; }
+
+    /* 確保星星本體不攔截點擊，讓容器統一處理 */
+    .placeholder-icon {
+        pointer-events: none;
+        font-size: 2.8rem; color: var(--star-color);
+        filter: drop-shadow(0 0 10px var(--star-color));
+        animation: float 4s infinite ease-in-out, breath 2.5s infinite ease-in-out;
+    }
+
+
+    
         }
 
         .theme-toggle {
@@ -84,8 +121,6 @@
             position: relative; cursor: pointer; overflow: hidden;
         }
 
-        .placeholder-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; z-index: 5; transition: opacity 0.5s; }
-        .placeholder-icon { font-size: 2.8rem; color: var(--star-color); animation: float 4s infinite ease-in-out; filter: drop-shadow(0 0 10px var(--star-color)); opacity: 0.8; }
         
         .card-content { display: none; width: 100%; height: 100%; flex-direction: column; position: relative; z-index: 10; }
         .card.revealed .card-content { display: flex; animation: fadeIn 1s ease-out; }
@@ -125,6 +160,43 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         #export-container { position: fixed; left: -9999px; top: 0; width: 1080px; height: 1350px; padding: 80px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     </style>
+    <script>
+    // 排查後的 JavaScript 點擊邏輯確保
+    const card = document.getElementById('main-card');
+    const placeholder = document.getElementById('placeholder'); // 針對星星容器
+
+    // 建議將點擊事件直接綁在 placeholder 容器上，反應最直接
+    placeholder.addEventListener('click', (e) => {
+        e.stopPropagation(); // 防止冒泡
+        if (card.classList.contains('revealed')) return;
+        
+        triggerDraw(); // 執行抽卡函式
+    });
+
+    // 或者維持你原本的 card 點擊邏輯，但要確保沒有被遮擋
+    card.addEventListener('click', (e) => {
+        // 如果已經抽過（顯示了內容），就不重複觸發
+        if (e.target.closest('.btn') || card.classList.contains('revealed')) return;
+        
+        triggerDraw();
+    });
+
+    function triggerDraw() {
+        if ("vibrate" in navigator) navigator.vibrate(15);
+        const randomIndex = Math.floor(Math.random() * lyricsDB.length);
+        current = lyricsDB[randomIndex];
+        if (!current) return;
+        
+        const charCount = current.t.replace(/<br>/g, '').length;
+        lDisp.style.fontSize = charCount > 60 ? '0.8rem' : charCount > 40 ? '0.92rem' : '1.1rem';
+        lDisp.innerHTML = current.t; 
+        sDisp.innerText = "《" + current.s + "》"; 
+        iDisp.innerText = current.i;
+        iDisp.scrollTop = 0;
+        card.classList.add('revealed');
+    }
+    </script>
+    
 </head>
 <body data-theme="light">
 
