@@ -4,21 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>共鳴歌詞 Resonance Lyrics</title>
-    
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=LXGW+WenKai+TC:wght@300;400&display=swap" rel="stylesheet">
-    
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
+    
     <style>
+/* 初始載入層：蓋滿全螢幕，層級最高 */
+#initial-loader {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: var(--bg-color);
+    z-index: 9999; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 1s ease-in-out, visibility 1s;
+}
+
+.loader-text {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            letter-spacing: 0.6em; /* 修改為 0.6em，與標題一致 */
+            text-indent: 0.6em;    /* 修正寬字距造成的視覺偏移 */
+            font-weight: 360;
+            transition: opacity 2s;
+        }
+
+        .fonts-ready .loader-text { opacity: 0; }
+
+/* 主內容：字型未準備好前是透明且模糊的 */
+.overlay {
+    opacity: 0; 
+    visibility: hidden; 
+    filter: blur(15px);
+    transition: opacity 1.5s ease, filter 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 當 JS 加入 fonts-ready 類名後：解除模糊並顯示內容 */
+.fonts-ready .overlay { 
+    opacity: 1; 
+    visibility: visible; 
+    filter: blur(0px); 
+}
         :root {
             --bg-color: #fdfdfd;
             --text-main: #1a1a1a;
             --text-sub: #888888;
-            --accent-glow: rgba(96, 165, 250, 0.25); 
-            --card-bg: rgba(255, 255, 255, 0.45); 
+            --accent-glow: rgba(96, 165, 250, 0.25); 
+            --card-bg: rgba(255, 255, 255, 0.45); 
             --card-border: rgba(0, 0, 0, 0.08);
             --btn-border: #ddd;
             --star-color: #60a5fa;
@@ -28,8 +63,8 @@
             --bg-color: #0a0a0b;
             --text-main: #f0f0f0;
             --text-sub: #888888;
-            --accent-glow: rgba(0, 242, 255, 0.25); 
-            --card-bg: rgba(20, 20, 25, 0.4); 
+            --accent-glow: rgba(0, 242, 255, 0.25); 
+            --card-bg: rgba(20, 20, 25, 0.4); 
             --card-border: rgba(255, 255, 255, 0.1);
             --btn-border: rgba(255, 255, 255, 0.2);
             --star-color: #00f2ff;
@@ -47,48 +82,11 @@
 
         #bg-canvas { position: absolute; top: 0; left: 0; z-index: 0; }
 
-       <style>
-    /* ... 保持之前的 CSS ... */
-
-    /* --- 關鍵點 1：字體加載完成後必須恢復點擊能力 --- */
-    .overlay {
-        position: relative; z-index: 10; width: 100%; height: 100%;
-        display: flex; flex-direction: column; align-items: center;
-        box-sizing: border-box; 
-        pointer-events: none; /* 初始關閉點擊 */
-        padding-top: 8vh;
-        opacity: 0; visibility: hidden; filter: blur(15px);
-        transition: opacity 1.5s ease, filter 1.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 1.5s;
-    }
-
-    .fonts-ready .overlay { 
-        opacity: 1; visibility: visible; filter: blur(0px); 
-        pointer-events: auto; /* 核心修正：字體好之後恢復點擊 */
-        transition: opacity 1.5s ease, filter 1.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0s;
-    }
-
-    /* --- 關鍵點 2：主頁星星容器需確保在卡片頂層 --- */
-    .placeholder-container { 
-        position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
-        display: flex; align-items: center; justify-content: center; 
-        z-index: 50; /* 提高層級，確保不會被 card-content 遮蓋點擊 */
-        cursor: pointer; /* 滑鼠移上去顯示手型 */
-        opacity: 0; 
-        transition: opacity 1s ease 0.5s; 
-    }
-    
-    .fonts-ready .placeholder-container { opacity: 0.8; }
-
-    /* 確保星星本體不攔截點擊，讓容器統一處理 */
-    .placeholder-icon {
-        pointer-events: none;
-        font-size: 2.8rem; color: var(--star-color);
-        filter: drop-shadow(0 0 10px var(--star-color));
-        animation: float 4s infinite ease-in-out, breath 2.5s infinite ease-in-out;
-    }
-
-
-    
+        .overlay {
+            position: relative; z-index: 10; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            box-sizing: border-box; pointer-events: none;
+            padding-top: 8vh; 
         }
 
         .theme-toggle {
@@ -105,23 +103,54 @@
         .header h1 { font-family: 'Montserrat', sans-serif; font-size: 1.4rem; font-weight: 300; letter-spacing: 0.6em; margin: 0; text-indent: 0.6em; }
         .header p { font-size: 0.8rem; letter-spacing: 0.2em; color: var(--text-sub); margin-top: 10px; font-weight: 300; }
 
-        .card-wrapper { 
+        .card-wrapper { 
             flex: 1; display: flex; align-items: flex-start; justify-content: center;
             pointer-events: auto; width: 90%; max-width: 380px;
-            padding-top: 2vh; padding-bottom: 12vh; 
+            padding-top: 2vh; padding-bottom: 3vh; 
         }
 
         .card {
             width: 100%; height: 580px; max-height: 72vh;
             background: var(--card-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             border-radius: 24px; border: 0.5px solid var(--card-border);
-            box-shadow: 0 25px 70px rgba(0,0,0,0.06); 
+            box-shadow: 0 25px 70px rgba(0,0,0,0.06); 
             display: flex; flex-direction: column; padding: 35px 28px 25px 28px; box-sizing: border-box;
-            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), background 0.8s; 
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), background 0.8s; 
             position: relative; cursor: pointer; overflow: hidden;
         }
+/* Footer 美學設計 */
+.footer-credits {
+    position: absolute;
+    bottom: 25px; /* 距離底部距離 */
+    width: 100%;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.55rem; /* 極小字體 */
+    color: var(--text-sub);
+    letter-spacing: 0.15em; /* 增加字距提升質感 */
+    opacity: 0.6; /* 半透明效果 */
+    z-index: 30;
+    pointer-events: none; /* 確保不會擋住底層點擊 */
+}
 
-        
+        .placeholder-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; z-index: 5; transition: opacity 0.5s; }
+        .placeholder-icon { font-size: 2.8rem; color: var(--star-color); animation: float 4s infinite ease-in-out; filter: drop-shadow(0 0 10px var(--star-color)); opacity: 0.8; }
+
+/* 定義波紋的形狀與起始點 */
+.placeholder-icon::after {
+    content: '';
+    position: absolute; 
+    top: 50%; 
+    left: 50%;
+    border-style: solid;
+    border-color: var(--star-color); /* 隨主題變化的顏色 */
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    /* 這裡調用了關鍵幀動畫，2.5秒循環一次 */
+    animation: pulse-ripple 2.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+    pointer-events: none;
+}
+        
         .card-content { display: none; width: 100%; height: 100%; flex-direction: column; position: relative; z-index: 10; }
         .card.revealed .card-content { display: flex; animation: fadeIn 1s ease-out; }
         .card.revealed .placeholder-container { opacity: 0; pointer-events: none; }
@@ -130,15 +159,15 @@
         .quote-mark { font-family: 'LXGW WenKai TC', sans-serif; font-size: 1.4rem; color: var(--accent-glow); position: absolute; line-height: 1; font-weight: 300; }
         .quote-up { top: 0; left: -10px; }
         .quote-down { bottom: 0; right: -10px; }
-        
+        
         .lyrics-container { line-height: 1.6; text-align: center; letter-spacing: 0.05em; color: var(--text-main); position: relative; z-index: 2; width: 100%; word-break: break-word; }
-        
+        
         .song-title { font-size: 0.65rem; color: var(--text-sub); letter-spacing: 0.05em; text-align: center; margin-bottom: 20px; flex-shrink: 0; padding: 0 10px; line-height: 1.5; z-index: 5; }
-        
-        .insight-box { 
-            font-size: 0.8rem; line-height: 1.65; color: var(--text-sub); text-align: justify; padding: 15px 0 10px 0; 
-            border-top: 0.5px solid rgba(128,128,128,0.15); width: 100%; opacity: 0; transform: translateY(10px); 
-            transition: all 0.8s 0.2s; overflow-y: auto; flex: 1; 
+        
+        .insight-box { 
+            font-size: 0.8rem; line-height: 1.65; color: var(--text-sub); text-align: justify; padding: 15px 0 10px 0; 
+            border-top: 0.5px solid rgba(128,128,128,0.15); width: 100%; opacity: 0; transform: translateY(10px); 
+            transition: all 0.8s 0.2s; overflow-y: auto; flex: 1; 
         }
         .insight-box::-webkit-scrollbar { width: 3px; }
         .insight-box::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.2); border-radius: 10px; }
@@ -146,7 +175,7 @@
 
         .action-area-inner { display: none; flex-direction: column; gap: 8px; width: 100%; margin-top: auto; padding-top: 15px; pointer-events: auto; flex-shrink: 0; }
         .card.revealed .action-area-inner { display: flex; animation: fadeIn 1.2s 0.6s backwards; }
-        
+        
         .btn { border: none; border-radius: 8px; padding: 11px; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; font-family: 'LXGW WenKai TC', sans-serif; display: flex; align-items: center; justify-content: center; letter-spacing: 0.3em; text-indent: 0.3em; }
         .btn-primary { background: var(--text-main); color: var(--bg-color); }
         .btn-secondary { background: transparent; border: 0.5px solid var(--btn-border); color: var(--text-sub); }
@@ -159,46 +188,28 @@
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         #export-container { position: fixed; left: -9999px; top: 0; width: 1080px; height: 1350px; padding: 80px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-    </style>
-    <script>
-    // 排查後的 JavaScript 點擊邏輯確保
-    const card = document.getElementById('main-card');
-    const placeholder = document.getElementById('placeholder'); // 針對星星容器
 
-    // 建議將點擊事件直接綁在 placeholder 容器上，反應最直接
-    placeholder.addEventListener('click', (e) => {
-        e.stopPropagation(); // 防止冒泡
-        if (card.classList.contains('revealed')) return;
-        
-        triggerDraw(); // 執行抽卡函式
-    });
-
-    // 或者維持你原本的 card 點擊邏輯，但要確保沒有被遮擋
-    card.addEventListener('click', (e) => {
-        // 如果已經抽過（顯示了內容），就不重複觸發
-        if (e.target.closest('.btn') || card.classList.contains('revealed')) return;
-        
-        triggerDraw();
-    });
-
-    function triggerDraw() {
-        if ("vibrate" in navigator) navigator.vibrate(15);
-        const randomIndex = Math.floor(Math.random() * lyricsDB.length);
-        current = lyricsDB[randomIndex];
-        if (!current) return;
-        
-        const charCount = current.t.replace(/<br>/g, '').length;
-        lDisp.style.fontSize = charCount > 60 ? '0.8rem' : charCount > 40 ? '0.92rem' : '1.1rem';
-        lDisp.innerHTML = current.t; 
-        sDisp.innerText = "《" + current.s + "》"; 
-        iDisp.innerText = current.i;
-        iDisp.scrollTop = 0;
-        card.classList.add('revealed');
+@keyframes pulse-ripple {
+    0% { 
+        width: 0px; 
+        height: 0px; 
+        opacity: 0.8; 
+        border-width: 2px; 
     }
-    </script>
-    
+    100% { 
+        width: 140px; /* 最終外擴的寬度 */
+        height: 140px; /* 最終外擴的高度 */
+        opacity: 0;   /* 完全透明 */
+        border-width: 0px; 
+    }
+}
+    </style>
 </head>
 <body data-theme="light">
+
+<div id="initial-loader">
+    <div class="loader-text">RESONANCE</div>
+</div>
 
     <button class="theme-toggle" id="theme-btn">⚪︎地球</button>
     <canvas id="bg-canvas"></canvas>
@@ -224,7 +235,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> 
+<div class="footer-credits">
+    Lyrics Resonance© 2026 Joyce Lam
+</div>
     </div>
 
     <div id="export-container"></div>
@@ -272,8 +286,8 @@
         function anim() {
             ctx.fillStyle = isDark ? 'rgba(10, 10, 11, 0.2)' : 'rgba(253, 253, 253, 0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ripples.forEach((r, i) => { r.update(); r.draw(); if(r.opacity < 0.01) ripples.splice(i, 1); });
-            particles.forEach((p, i) => { 
-                p.update(); p.draw(ctx); 
+            particles.forEach((p, i) => { 
+                p.update(); p.draw(ctx); 
                 for(let j = i + 1; j < particles.length; j++) {
                     const d = Math.hypot(p.x - particles[j].x, p.y - particles[j].y);
                     if(d < 140) {
@@ -339,7 +353,7 @@
             if (e.target.closest('.btn') || card.classList.contains('revealed')) return;
             triggerHaptic();
             current = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
-            
+            
             const charCount = current.t.replace(/<br>/g, '').length;
             if(charCount > 60) {
                 lDisp.style.fontSize = '0.8rem';
@@ -351,9 +365,10 @@
                 lDisp.style.fontSize = '1.1rem';
                 lDisp.style.lineHeight = '1.7';
             }
-            
-            lDisp.innerHTML = current.t; 
-            sDisp.innerText = "《" + (current.s.length > 20 ? current.s.substring(0,20)+"..." : current.s) + "》"; 
+            
+            lDisp.innerHTML = current.t; 
+            // 
+            sDisp.innerText = "《" + current.s + "》"; 
             iDisp.innerText = current.i;
             iDisp.scrollTop = 0;
             card.classList.add('revealed');
@@ -385,7 +400,7 @@
             const textColor = isDark ? '#f0f0f0' : '#1a1a1a';
             const cardBg = isDark ? 'rgba(20, 20, 25, 0.9)' : 'rgba(255, 255, 255, 0.9)';
             const quoteColor = isDark ? 'rgba(0, 242, 255, 0.25)' : 'rgba(96, 165, 250, 0.25)';
-            
+            
             container.style.backgroundImage = `url(${cleanBg})`; container.style.backgroundSize = 'cover';
             container.innerHTML = `
                 <div style="text-align: center; margin-bottom: 60px; width: 100%;"><div style="font-family: 'Montserrat'; font-size: 36px; letter-spacing: 0.8em; color: ${textColor}; text-indent: 0.8em; opacity: 0.8;">RESONANCE</div></div>
@@ -410,6 +425,39 @@
         });
 
         function showToast(msg) { toast.innerText = msg; toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 3000); }
+
+async function waitForFonts() {
+    // 等待瀏覽器的字體 API 準備就緒
+    await document.fonts.ready;
+    return new Promise((resolve) => {
+        const checkFonts = () => {
+            // 具體檢查你所引入的字型名稱是否已可使用
+            const isWenKaiReady = document.fonts.check('1em "LXGW WenKai TC"');
+            const isMontReady = document.fonts.check('1em "Montserrat"');
+            
+            if (isWenKaiReady && isMontReady) {
+                resolve(); // 字型全部載入完成
+            } else {
+                setTimeout(checkFonts, 100); // 100毫秒後再次檢查
+            }
+        };
+        checkFonts();
+    });
+}
+
+// 執行載入邏輯
+waitForFonts().then(() => {
+    const loader = document.getElementById('initial-loader');
+    // 1. 給 body 加上標記，觸發 CSS 的淡入動畫
+    document.body.classList.add('fonts-ready');
+    
+    // 2. 延遲 0.5秒後完全移除 loading 層（配合 opacity 動畫時間）
+    setTimeout(() => {
+        loader.style.opacity = '0';
+        loader.style.visibility = 'hidden';
+    }, 500); 
+});
+
     </script>
 </body>
 </html>
