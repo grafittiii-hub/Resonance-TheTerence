@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>共鳴歌詞 Resonance Lyrics</title>
-<script src="https://www.youtube.com/iframe_api"></script>
-    
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=LXGW+WenKai+TC:wght@300;400&display=swap" rel="stylesheet">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    
     <style>
         /* 初始載入層：蓋滿全螢幕，層級最高 */
         #initial-loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color);
+            background-color: transparent;
             z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            align-items: center; justify-content: space-between;
+            padding: 40vh 0 10vh 0; box-sizing: border-box;
             transition: opacity 1s ease-in-out, visibility 2s;
         }
 
@@ -27,38 +27,76 @@
             font-family: 'Montserrat', sans-serif;
             font-size: 0.8rem;
             color: var(--text-sub);
-            letter-spacing: 0.6em; 
-            text-indent: 0.6em;    
+            letter-spacing: 0.6em; 
+            text-indent: 0.6em;    
             font-weight: 360;
             transition: opacity 2s;
         }
 
+/* 1. 初始隱藏狀態 */
+.theme-toggle, .mute-control {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 1s ease, visibility 1s; /* 增加平滑漸入效果 */
+}
+
+.fonts-ready .theme-toggle {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* 新增：只有被加上 .show 類別時，Mute 按鈕才顯示 */
+.mute-control.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* 當準備好時，讓載入層立即失去「點擊攔截」功能 */
+.fonts-ready #initial-loader {
+    pointer-events: none;
+}
+        .progress-bar-bg {
+            position: absolute; bottom: 15%; width: 45%; max-width: 140px;
+            height: 2px; background: rgba(128,128,128,0.2); border-radius: 2px;
+            overflow: hidden; opacity: 1; transition: opacity 1s ease;
+        }
+
+        .progress-bar-fill {
+            width: 0%; height: 100%; background: var(--star-color);
+            box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+            transition: width 0.4s ease-out;
+        }
+
         .fonts-ready .loader-text { opacity: 0; }
+        .fonts-ready .progress-bar-bg { opacity: 0; visibility: hidden; }
 
         /* 主內容：字型未準備好前是透明且模糊的 */
         .overlay {
-            opacity: 0; 
-            visibility: hidden; 
+            opacity: 0; 
+            visibility: hidden; 
             filter: blur(15px);
             transition: opacity 1.5s ease, filter 1.5s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative; z-index: 10; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center;
             box-sizing: border-box; pointer-events: none;
-            padding-top: 8vh; 
+            padding-top: 8vh; 
         }
 
-        .fonts-ready .overlay { 
-            opacity: 1; 
-            visibility: visible; 
-            filter: blur(0px); 
+        .fonts-ready .overlay { 
+            opacity: 1; 
+            visibility: visible; 
+            filter: blur(0px); 
         }
 
         :root {
             --bg-color: #fdfdfd;
             --text-main: #1a1a1a;
             --text-sub: #888888;
-            --accent-glow: rgba(96, 165, 250, 0.25); 
-            --card-bg: rgba(255, 255, 255, 0.45); 
+            --accent-glow: rgba(96, 165, 250, 0.25); 
+            --card-bg: rgba(255, 255, 255, 0.45); 
             --card-border: rgba(0, 0, 0, 0.08);
             --btn-border: #ddd;
             --star-color: #60a5fa;
@@ -68,8 +106,8 @@
             --bg-color: #0a0a0b;
             --text-main: #f0f0f0;
             --text-sub: #888888;
-            --accent-glow: rgba(0, 242, 255, 0.25); 
-            --card-bg: rgba(20, 20, 25, 0.4); 
+            --accent-glow: rgba(0, 242, 255, 0.25); 
+            --card-bg: rgba(20, 20, 25, 0.4); 
             --card-border: rgba(255, 255, 255, 0.1);
             --btn-border: rgba(255, 255, 255, 0.2);
             --star-color: #00f2ff;
@@ -97,65 +135,98 @@
             letter-spacing: 0.1em; backdrop-filter: blur(5px);
         }
 
-        .header { text-align: center; margin-bottom: 2vh; opacity: 0; animation: fadeIn 1.2s forwards ease-out; width: 100%; }
+	.theme-toggle:hover {
+	    border-color: var(--star-color);     /* 邊框變藍 */
+	}
+
+
+        .mute-control {
+            position: fixed; 
+            bottom: 25px;
+            left: 25px; 
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 0.5px solid var(--btn-border);
+            background: rgba(200, 200, 200, 0.3); 
+            color: var(--text-main); 
+            font-size: 1.1rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            pointer-events: auto;
+        }
+
+	.mute-control:hover {
+	    border-color: var(--star-color);     /* 邊框變藍 */
+	}
+
+        .header { text-align: center; margin-bottom: 1vh; opacity: 0; animation: fadeIn 1.2s forwards ease-out; width: 100%; }
         .header h1 { font-family: 'Montserrat', sans-serif; font-size: 1.4rem; font-weight: 300; letter-spacing: 0.6em; margin: 0; text-indent: 0.6em; }
         .header p { font-size: 0.8rem; letter-spacing: 0.2em; color: var(--text-sub); margin-top: 10px; font-weight: 300; }
 
-/* 新的水印位置：位於副標題與卡片之間 */
-.watermark-inline {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.65rem;
-    letter-spacing: 0.5em;
-    text-indent: 0.5em;
-    margin-top: 1vh;
-    margin-bottom: 1vh;
-    transition: color 0.8s ease;
-    opacity: 0.5;
-}
-[data-theme="light"] .watermark-inline { color: #e0e0e0; } /* 淺色模式極淡 */
-[data-theme="dark"] .watermark-inline { color: #1a1a1c; }  /* 深色模式極暗 */
+        .watermark-inline {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.5em;
+            text-indent: 0.5em;
+	text-align: center;
+	margin-top: -2vh; /* 微微往上靠緊副標題 */
+            margin-bottom: 1vh;
+            white-space: nowrap;
+            transition: color 0.8s ease;
+            opacity: 0.5;
+        }
+        [data-theme="light"] .watermark-inline { color: #e0e0e0; } 
+        [data-theme="dark"] .watermark-inline { color: #1a1a1c; }  
 
-
-        .card-wrapper { 
+        .card-wrapper { 
             flex: 1; display: flex; align-items: flex-start; justify-content: center;
             pointer-events: auto; width: 90%; max-width: 380px;
-            padding-top: 2vh; padding-bottom: 3vh; 
+            padding-top: 1vh; padding-bottom: 3vh; 
         }
 
         .card {
-            width: 100%; height: 580px; max-height: 72vh;
+            width: 100%; 
+            min-height: 70vh;
+            height: auto;
+            max-height: 75vh;
             background: var(--card-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             border-radius: 24px; border: 0.5px solid var(--card-border);
-            box-shadow: 0 25px 70px rgba(0,0,0,0.06); 
-            display: flex; flex-direction: column; padding: 35px 28px 25px 28px; box-sizing: border-box;
-            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), background 0.8s; 
+            box-shadow: 0 25px 70px rgba(0,0,0,0.06); 
+            display: flex; flex-direction: column; padding: 35px 28px 20px 28px; box-sizing: border-box;
             position: relative; cursor: default; overflow: hidden;
-    transition: transform 0.1s ease-out, background 0.8s; /* 縮短過渡時間讓移動更跟手🤣 */
-    transform-style: preserve-3d;
-    will-change: transform;
-}
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+            transform-style: preserve-3d;
+            will-change: transform;
         }
 
         .footer-credits {
-            position: absolute; bottom: 15px; width: 100%; text-align: center;
+            position: absolute; bottom: 10px; width: 100%; text-align: center;
             font-family: 'Montserrat', sans-serif; font-size: 0.55rem; color: var(--text-sub);
-            letter-spacing: 0.15em; opacity: 0.6; z-index: 30; pointer-events: none; 
+            letter-spacing: 0.15em; opacity: 0.6; z-index: 30; pointer-events: none; 
         }
 
-        /* ----- 優化區塊：動畫雙向過渡設定 ----- */
-        .placeholder-container { 
-            position: absolute; top: 50%; left: 50%; 
-            transform: translate(-50%, -50%) scale(1); 
-            width: 160px; height: 160px; 
-            display: flex; align-items: center; justify-content: center; 
+        .placeholder-container { 
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%) scale(1); 
+            width: 160px; height: 160px; 
+            display: flex; align-items: center; justify-content: center; 
             z-index: 20; cursor: pointer; border-radius: 50%;
             opacity: 1; visibility: visible;
             transition: opacity 0.4s ease, visibility 0.4s, transform 0.4s ease;
         }
-        
-        .card.revealed .placeholder-container { 
-            opacity: 0; visibility: hidden; pointer-events: none; 
-            transform: translate(-50%, -50%) scale(0.9); /* 點擊後微微縮小隱藏 */
+        
+        .card.revealed .placeholder-container { 
+            opacity: 0; visibility: hidden; pointer-events: none; 
+            transform: translate(-50%, -50%) scale(0.9); 
         }
 
         .placeholder-icon { font-size: 2.8rem; color: var(--star-color); animation: float 4s infinite ease-in-out; filter: drop-shadow(0 0 10px var(--star-color)); opacity: 0.8; }
@@ -164,90 +235,74 @@
             content: ''; position: absolute; top: 50%; left: 50%; border-style: solid; border-color: var(--star-color); border-radius: 50%; transform: translate(-50%, -50%);
             animation: pulse-ripple 2.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite; pointer-events: none;
         }
-        
-        /* 修改為 display: flex 並使用 opacity/visibility 進行動畫控制 */
-        .card-content { 
-            display: flex; width: 100%; height: 100%; flex-direction: column; position: relative; z-index: 10; 
+        
+        .card-content { 
+            display: flex; width: 100%; height: 100%; flex-direction: column; position: relative; z-index: 10; 
             opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(8px);
-            transition: opacity 0.4s ease, visibility 0.4s, transform 0.4s ease; /* 退出時的流暢速度 */
+            transition: opacity 0.4s ease, visibility 0.4s, transform 0.4s ease; 
         }
-        .card.revealed .card-content { 
+        .card.revealed .card-content { 
             opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out; /* 展開時的平緩速度 */
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out; 
         }
 
-        .lyrics-wrapper { position: relative; width: 100%; padding: 20px 0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 140px; }
+        .lyrics-wrapper { 
+            position: relative; width: 100%; 
+            padding: 5vh 0;
+            flex: 1;
+            display: flex; align-items: center; justify-content: center; 
+        }
         .quote-mark { font-family: 'LXGW WenKai TC', sans-serif; font-size: 1.4rem; color: var(--accent-glow); position: absolute; line-height: 1; font-weight: 300; }
         .quote-up { top: 0; left: -10px; }
         .quote-down { bottom: 0; right: -10px; }
-        .lyrics-container { line-height: 1.6; text-align: center; letter-spacing: 0.05em; color: var(--text-main); position: relative; z-index: 2; width: 100%; word-break: break-word; }
-        .song-title { font-size: 0.65rem; color: var(--text-sub); letter-spacing: 0.05em; text-align: center; margin: 20px -15px 20px -15px; flex-shrink: 0; padding: 0px; line-height: 1.5; z-index: 5; word-break: keep-all; }
-        
-        .insight-box { 
-            font-size: 0.8rem; line-height: 1.65; color: var(--text-sub); text-align: justify; padding: 15px 0 10px 0; 
-            border-top: 0.5px solid rgba(128,128,128,0.15); width: 100%; flex: 1; overflow-y: auto;
-            opacity: 0; transform: translateY(10px); 
-            transition: opacity 0.3s ease, transform 0.3s ease; /* 退出動畫 */
+        .lyrics-container { line-height: 1.6; font-size: 1.15rem; text-align: center; letter-spacing: 0.05em; color: var(--text-main); position: relative; z-index: 2; width: 100%; word-break: break-word; }
+        .song-title { font-size: 0.65rem; color: var(--text-sub); letter-spacing: 0.05em; text-align: center; margin: 10px -15px 20px -15px; flex-shrink: 0; padding: 0px; line-height: 1.5; z-index: 5; word-break: keep-all; }
+        
+        .insight-box { 
+            font-size: 0.8rem; line-height: 1.65; color: var(--text-sub); text-align: justify; padding: 15px 0 10px 0; 
+            border-top: 0.5px solid rgba(128,128,128,0.15); width: 100%; overflow-y: auto;
+            opacity: 0; transform: translateY(10px); 
+            transition: opacity 0.3s ease, transform 0.3s ease; 
         }
-        .card.revealed .insight-box { 
-            opacity: 1; transform: translateY(0); 
-            transition: opacity 0.8s 0.2s ease, transform 0.8s 0.2s ease; /* 進入時延遲 0.2s */
+        .card.revealed .insight-box { 
+            opacity: 1; transform: translateY(0); 
+            transition: opacity 0.8s 0.2s ease, transform 0.8s 0.2s ease; 
         }
         .insight-box::-webkit-scrollbar { width: 3px; }
         .insight-box::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.2); border-radius: 10px; }
 
-        .action-area-inner { 
+        .action-area-inner { 
             display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: auto; padding-top: 15px; flex-shrink: 0;
             opacity: 0; visibility: hidden; transform: translateY(10px); pointer-events: none;
-            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s; /* 退出動畫 */
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s; 
         }
-        .card.revealed .action-area-inner { 
+        .card.revealed .action-area-inner { 
             opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto;
-            transition: opacity 0.8s 0.4s ease, transform 0.8s 0.4s ease; /* 進入時延遲 0.4s */
+            transition: opacity 0.8s 0.4s ease, transform 0.8s 0.4s ease; 
         }
-        
-        .btn { border: none; border-radius: 8px; padding: 11px; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; font-family: 'LXGW WenKai TC', sans-serif; display: flex; align-items: center; justify-content: center; letter-spacing: 0.3em; text-indent: 0.3em; }
-        .btn-primary { background: var(--text-main); color: var(--bg-color); }
-        .btn-secondary { background: transparent; border: 0.5px solid var(--btn-border); color: var(--text-sub); }
+        
+        .btn { border-radius: 8px; padding: 11px; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; font-family: 'LXGW WenKai TC', sans-serif; display: flex; align-items: center; justify-content: center; letter-spacing: 0.3em; text-indent: 0.3em; border: 1px solid transparent; /* 預設先給透明邊框 */
+    box-sizing: border-box; /* 確保邊框不增加按鈕寬度 */}
+        .btn-primary { background: var(--text-main); color: var(--bg-color);border: 0.5px solid transpbarent; /* 預設透明邊框，防止抖動 */
+ ; transition: all 0.3s ease;
+    cursor: pointer; }
+        .btn-secondary { background: transparent; border: 0.5px solid var(--btn-border); color: var(--text-sub);transition: all 0.3s ease;
+    cursor: pointer; }
+	.btn-primary:hover {
+    	 border-color: var(--star-color);     /* 邊框變藍 */
+       color: var(--star-color);
+	transform: translateY(-2px); /* 輕微上浮感 */
+}
+
+	.btn-secondary:hover {
+    border-color: var(--star-color);     /* 邊框變藍 */
+    background-color: rgba(0, 122, 255, 0.05); /* 淡淡的藍色背景，增加點擊感 */
+    transform: translateY(-2px); /* 輕微上浮感 */
+}
 
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); gap: 20px; }
         .spinner { width: 24px; height: 24px; border: 2px solid rgba(128,128,128,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; }
         #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 24px; border-radius: 100px; font-size: 0.8rem; z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-
-/* 左下角圓形音量按鈕 */
-.mute-control {
-    position: fixed; /* 改為 fixed 確保在所有頁面位置固定 */
-    bottom: 25px;
-    left: 25px; 
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 0.5px solid var(--btn-border);
-    background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 100;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    padding: 0;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.mute-control:active { transform: scale(0.9); }
-
-.mute-control img {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    transition: opacity 0.3s ease;
-}
-
-/* 靜音時的微調 */
-.mute-control.is-muted img {
-    opacity: 0.6;
-}
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
@@ -264,6 +319,9 @@
 
     <div id="initial-loader">
         <div class="loader-text">RESONANCE</div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="init-progress"></div>
+        </div>
     </div>
 
     <button class="theme-toggle" id="theme-btn">⚪︎地球</button>
@@ -273,10 +331,7 @@
 
     <div class="overlay">
         <div class="header"><h1>RESONANCE</h1><p>共鳴歌詞 · 泰倫斯Terence</p></div>
-
-<div class="watermark-inline">JLPL</div> 
-<div id="yt-player" style="display:none;"></div>
-
+        <div class="watermark-inline">JLPL</div>
         <div class="card-wrapper">
             <div class="card" id="main-card">
                 <div class="placeholder-container" id="placeholder"><div class="placeholder-icon">✧</div></div>
@@ -294,24 +349,40 @@
                     </div>
                 </div>
             </div>
-        </div> 
-<button class="mute-control" id="mute-btn">
-<img id="mute-icon" src="iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAADXElEQVR4nO2dS0hUURjHf0NTS9NMK8uHNoIuWrSptSwaSIsitYhIitSioIuIdS8iWpS0SIsIatGiIigpSIsiSIsWpS0itSgtWpS2iNTCvIdzS8cx08yZe889c878f+By78z9zvf97v8999yzS7FYDBMTE6WEECHYQYisRAiyEiHISoQgKxGCrEQIshIhyEqEICsRgqxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhB" alt="Volume">
-</button>
-<div id="yt-player" style="display:none;"></div>
+        </div> 
         <div class="footer-credits">
             Lyrics Resonance© 2026 Joyce Lam
         </div>
     </div>
+
+    <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 0; height: 0;"></div>
+    
+    <button class="mute-control" id="mute-btn">■</button>
 
     <div id="export-container"></div>
     <div id="qr-hidden" style="display:none;"></div>
 
     <script>
         const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
+        canvas.style.opacity = "0"; // 初始不可見
+        canvas.style.transition = "opacity 1s ease"; // 設定漸入動畫
+        
+        // 關鍵修復 2：補回 3 秒後讓粒子浮現的觸發器
+        setTimeout(() => {
+            canvas.style.opacity = "1";
+        }, 1500);
+
+        const ctx = canvas ? canvas.getContext('2d') : null;
         const themeBtn = document.getElementById('theme-btn');
         let particles = []; let ripples = []; let isDark = false;
+
+        let initProgressValue = 10;
+        const progressFill = document.getElementById('init-progress');
+        function updateProgress(val) {
+            initProgressValue = Math.max(initProgressValue, val);
+            if (progressFill) progressFill.style.width = initProgressValue + '%';
+        }
+        updateProgress(10); 
 
         class Particle {
             constructor() { this.init(); }
@@ -367,78 +438,51 @@
         window.addEventListener('resize', resize);
         themeBtn.addEventListener('click', (e) => { e.stopPropagation(); isDark = !isDark; document.body.setAttribute('data-theme', isDark ? 'dark' : 'light'); themeBtn.innerText = isDark ? '⚫︎月球' : '⚪︎地球'; });
 
+        function getYTIdFromUrl(url) {
+            let match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/))([^?&]+)/);
+            return match ? match[1] : null;
+        }
+
         const lyricsDB = [
             { s: "帶你往返地球月球", t: "Take my hand～ 帶你往返星球<br>向世界出走 到半彎裡駐守", i: "願你逃離引力的束縛，隨我前往只有我倆的彎月上，讓俗世成為遙遠的背景。", u: "https://youtu.be/Pd6Vxw5ZmKA", ytId: "Pd6Vxw5ZmKA", start: 56 },
             { s: "帶你往返地球月球", t: "細語若置身沙漏<br>點點愛都給穿透", i: "用溫言鋪敘時光，總有一天你會感受到吧。", u: "https://youtu.be/Pd6Vxw5ZmKA", ytId: "Pd6Vxw5ZmKA", start: 46 },
             { s: "帶你往返地球月球", t: "Can’t imagine if I lose you, <br>Can’t imagine if it is not you", i: "在我的宇宙中有一種不可替代的頻率，那便是你。", u: "https://youtu.be/Pd6Vxw5ZmKA", ytId: "Pd6Vxw5ZmKA", start: 164 },
-            { s: "Stay Kidz", t: "Wanna Stay kidz<br>let’s stay kidz 玩火<br>Gonna Stay kidz<br>let’s stay kidz 沒錯", i: "成熟是不得已的偽裝，玩火是不認命的倔強。我們要在成人世界的邊緣，守住那一顆跳動的童心。", u: "https://youtu.be/axccTAHl5XI" , ytId: "axccTAHl5XI", start: 15 },
-            { s: "Stay Kidz", t: "誰可一貫自我<br>亂世間請關起耳朵<br>別染污這一雙笑窩", i: "嘈雜的聲音太多，關上耳朵不是為了逃避，而是為了聽清內心最初的笑聲。", u: "https://youtu.be/axccTAHl5XI" , ytId: "axccTAHl5XI", start: 50 },
-            { s: "Stay Kidz", t: "寧願你沒擅長<br>繼續善良<br>未需要把心鎖上", i: "世人崇尚功利，我卻唯獨崇尚你的單純。別讓世界冷卻了你的熱誠。", u: "https://youtu.be/axccTAHl5XI" , ytId: "axccTAHl5XI", start: 134 },
-            { s: "Inside My Bubble", t: "Inside my bubble woah~<br>I'll be my idol woah~~~<br>Call me a psycho woah~<br>只愛自己", i: "在自我的場域裡，我就是唯一的神。瘋狂與否由我定義，愛自己是這個世紀最浪漫的冒險。", u: "https://youtu.be/ihDdrcEq1FE", ytId: "ihDdrcEq1FE", start: 23},
+            { s: "Stay Kidz (feat. MADBOII)", t: "Wanna Stay kidz<br>let’s stay kidz 玩火<br>Gonna Stay kidz<br>let’s stay kidz 沒錯", i: "成熟是不得已的偽裝，玩火是不認命的倔強。我們要在成人世界的邊緣，守住那一顆跳動的童心。", u: "https://youtu.be/axccTAHl5XI", ytId: "axccTAHl5XI", start: 15 },
+            { s: "Stay Kidz (feat. MADBOII)", t: "誰可一貫自我<br>亂世間請關起耳朵<br>別染污這一雙笑窩", i: "嘈雜的聲音太多，關上耳朵不是為了逃避，而是為了聽清內心最初的笑聲。", u: "https://youtu.be/axccTAHl5XI", ytId: "axccTAHl5XI", start: 50 },
+            { s: "Stay Kidz (feat. MADBOII)", t: "寧願你沒擅長<br>繼續善良<br>未需要把心鎖上", i: "世人崇尚功利，我卻唯獨崇尚你的單純。別讓世界冷卻了你的熱誠。", u: "https://youtu.be/axccTAHl5XI", ytId: "axccTAHl5XI", start: 134 },
+            { s: "Inside My Bubble", t: "Inside my bubble woah~<br>I'll be my idol woah~~~<br>Call me a psycho woah~<br>只愛自己", i: "在自我的場域裡，我就是唯一的神。瘋狂與否由我定義，愛自己是這個世紀最浪漫的冒險。", u: "https://youtu.be/ihDdrcEq1FE", ytId: "ihDdrcEq1FE", start: 23 },
             { s: "Inside My Bubble", t: "當個怪客到處飛<br>遨遊懶計性價比<br>盡情怪到下世紀", i: "快樂不應該被計量，做一個格格不入的怪客，才是最高級的自由。", u: "https://youtu.be/ihDdrcEq1FE", ytId: "ihDdrcEq1FE", start: 64 },
             { s: "Inside My Bubble", t: "首先該謹記<br>快樂是自給的美", i: "當你學會自己發光，你會發現快樂的燃料其實一直藏在你的呼吸裡。", u: "https://youtu.be/ihDdrcEq1FE", ytId: "ihDdrcEq1FE", start:119 },
-            { s: "流浪的月", t: "這距離感 實在太遠<br>所有時機 全部錯亂<br>想復原 怎復原 不懂分寸", i: "命運最擅長開玩笑。無論是在對的時間錯過，或在錯的時間執著，最終我流浪在與你相隔的空間。", u: "https://youtu.be/9ruqQnboOzs" },
-            { s: "流浪的月", t: "感覺懸空 流浪似月<br>等月圓 等月圓 相擁取暖", i: "孤獨感有時就像在月球遙望地球。而我還在等待一個可以不再流浪、互相依偎的團圓之時。", u: "https://youtu.be/9ruqQnboOzs" },
-            { s: "Make a Move", t: "Take me somewhere<br>with just me and you", i: "找一個沒人能打擾我們的地方。在那裡，名字不再重要，重要的是此時此刻的體溫與心跳。", u: "https://youtu.be/vG4oFkttvq4" },
-            { s: "Make a Move", t: "即管扮呷醋<br>根本愛情充滿套路", i: "愛情是一場心照不宣的博弈。那些幼稚的試探與偽裝，不過是為了確認自己在你眼中的重要性。", u: "https://youtu.be/vG4oFkttvq4" },
-            { s: "Make a Move", t: "要後退一小步<br>再帶點吞吐<br>靜待你的追捕", i: "戀愛最迷人的時刻，往往在於那種若即若離的曖昧。故意留下線索，只為引你入懷。", u: "https://youtu.be/vG4oFkttvq4" },
-            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "深宵沒你 晚霞沒你<br>似乎 人要錯失方知見微", i: "身邊少了你，卻處處都是你。遺憾是，只能思憶追悔。", u: "https://youtu.be/EWispEWX3X4" },
-            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "與你共渡 世界在塌下<br>真的末日 有你亦瀟灑", i: "如果結局注定是崩塌，那我有你就好。屆時，末日也不過是場壯麗的背景。", u: "https://youtu.be/EWispEWX3X4" },
-            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "吸一啖氣 放緩步履<br>眼前 人錯過至珍惜太悲", i: "學會慢下來，是為了看清眼前的珍貴。別等到只剩下背影，才想起要伸出那隻手。", u: "https://youtu.be/EWispEWX3X4" },
-            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "Even if you starting losing your hold<br>Please never never being hopeless", i: "在最絕望的深淵，只要你還在呼吸，就依然有重新站起的理由。", u: "https://youtu.be/EWispEWX3X4" },
-            { s: "Let's Never…", t: "觸不到 終於知道<br>早應說愛不吞吐", i: "遺憾是那句來不及說出口的真心話。有些距離不是因為遠，而是因為我們在該勇敢的時候選擇了沈默。", u: "https://youtu.be/vYL5odhxlVY?si=UK0hwsogtF7iOoeU" },
-            { s: "Let's Never…", t: "劃破夜空 似對我笑著<br>跨過大海 冷卻了憂傷<br>但也沒可救藥 未減退遐想", i: "思念是無藥可救的頑疾。即便時間冷卻了傷口，那些關於你的遐想依然會隨星光不期而至。", u: "https://youtu.be/vYL5odhxlVY" },
-            { s: "Let's Never…", t: "即使折磨拖垮着我<br>不想略過忘記當初", i: "痛苦也是記憶的一部分。與其優雅地忘記，我寧願狼狽地記住，記住我們那時最熾熱的模樣。", u: "https://youtu.be/vYL5odhxlVY" },
-            { s: "永夜漂流", t: "若愛 會永遠不動搖<br>但你 在力證它可笑<br>猶如步過用完的斷橋", i: "承諾就像那座斷橋，走過去了才發現搖搖欲墜，不可維繫。", u: "https://youtu.be/puK8ivwAoog" },
-            { s: "永夜漂流", t: "關起雙眼奢想已久<br>失憶好過身體消瘦<br>欺騙 所有<br>I hope you'll be fine", i: "哪怕是矛盾得自欺欺人，我願意用一切去昧著受傷的真心，為你送上放手的祝福。", u: "https://youtu.be/puK8ivwAoog" },
-            { s: "永夜漂流", t: "I hope you'll be fine<br>Good night", i: "最溫柔的殘酷，莫過於在斷聯前那句客氣的祝願。晚安，是在這個黑夜裡我能給你最後的愛。", u: "https://youtu.be/puK8ivwAoog" },
-            { s: "永夜漂流", t: "黑暗 會代我撫慰寂寥<br>光線 長期為你下調", i: "既然光線太刺眼，不如躲進黑暗，讓那些陳年舊事隨夜息沉沒。", u: "https://youtu.be/puK8ivwAoog" },
-            { s: "永夜漂流", t: "膚淺的愛奢想永久<br>只得一個傷得深厚<br>不算 罕有", i: "在这个流行快餐式情感的時代，深情反而成了一種負擔。我只是剛好成為了那個受傷的人。", u: "https://youtu.be/puK8ivwAoog" },
-            { s: "Dreamer", t: "若是摘那星星太遙遠<br>捉緊你手從未棄權", i: "夢想可以很宏大，也可以很具體。比起那顆遙不可及的星，我更在意手心裡的那份溫暖。", u: "https://youtu.be/tbQkwoPkuYE" },
-            { s: "Dreamer", t: "(I’ll be a) Dreamer<br>dreaming about you", i: "所有的白日夢裡都有你的存在。如果現實太沈重，那就讓我們在夢境裡無限期延長那份相會。", u: "https://youtu.be/tbQkwoPkuYE" },
-            { s: "Dreamer", t: "萬大事你身邊起碼<br>我為你擋下", i: "在你最脆弱的時刻，我依然會為你擋下所有風霜。我不是什麼英雄，只是一個愛你的人。", u: "https://youtu.be/tbQkwoPkuYE" },
-            { s: "DAY DAY BIRTHDAY", t: "Everyday 享受一起<br>重生地 歡呼 躍起<br>Celebrate Everyday", i: "只要和你在一起，每一分每一秒都是一場快樂慶典。", u: "https://youtu.be/m1CWHt_R9Jk" },
-            { s: "DAY DAY BIRTHDAY", t: "想就一起<br>隨意地 高歌 報喜", i: "快樂不需要挑日子。只要當下的心境對了，隨時隨地都能歡唱。", u: "https://youtu.be/m1CWHt_R9Jk?si=iaB4MARCzYU8dxsv" }
+            { s: "流浪的月", t: "這距離感 實在太遠<br>所有時機 全部錯亂<br>想復原 怎復原 不懂分寸", i: "命運最擅長開玩笑。無論是在對的時間錯過，或在錯的時間執著，最終我流浪在與你相隔的空間。", u: "https://youtu.be/9ruqQnboOzs", ytId: "9ruqQnboOzs", start:54 },
+            { s: "流浪的月", t: "感覺懸空 流浪似月<br>等月圓 等月圓 相擁取暖", i: "孤獨感有時就像在月球遙望地球。而我還在等待一個可以不再流浪、互相依偎的團圓之時。", u: "https://youtu.be/9ruqQnboOzs", ytId: "9ruqQnboOzs", start:116 },
+            { s: "Make a Move", t: "Take me somewhere<br>with just me and you", i: "找一個沒人能打擾我們的地方。在那裡，名字不再重要，重要的是此時此刻的體溫與心跳。", u: "https://youtu.be/vG4oFkttvq4", ytId: "vG4oFkttvq4", start:62 },
+            { s: "Make a Move", t: "即管扮呷醋<br>根本愛情充滿套路", i: "愛情是一場心照不宣的博弈。那些幼稚的試探與偽裝，不過是為了確認自己在你眼中的重要性。", u: "https://youtu.be/vG4oFkttvq4", ytId: "vG4oFkttvq4", start:32 },
+            { s: "Make a Move", t: "要後退一小步<br>再帶點吞吐<br>靜待你的追捕", i: "戀愛最迷人的時刻，往往在於那種若即若離的曖昧。故意留下線索，只為引你入懷。", u: "https://youtu.be/vG4oFkttvq4", ytId: "vG4oFkttvq4", start:108 },
+            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "深宵沒你 晚霞沒你<br>似乎 人要錯失方知見微", i: "身邊少了你，卻處處都是你。遺憾是，只能思憶追悔。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:33 },
+            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "與你共渡 世界在塌下<br>真的末日 有你亦瀟灑", i: "如果結局注定是崩塌，那我有你就好。屆時，末日也不過是場壯麗的背景。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:153 },
+            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "吸一啖氣 放緩步履<br>眼前 人錯過至珍惜太悲", i: "學會慢下來，是為了看清眼前的珍貴。別等到只剩下背影，才想起要伸出那隻手。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:196 },
+            { s: "如何部署一人面對細雨/狂雷/落石/末日/自己/捱一半害怕?", t: "Even if you starting losing your hold<br>Please never never being hopeless", i: "在最絕望的深淵，只要你還在呼吸，就依然有重新站起的理由。", u: "https://youtu.be/EWispEWX3X4", ytId: "EWispEWX3X4", start:128 },
+            { s: "Let's Never…", t: "觸不到 終於知道<br>早應說愛不吞吐", i: "遺憾是那句來不及說出口的真心話。有些距離不是因為遠，而是因為我們在該勇敢的時候選擇了沈默。", u: "https://youtu.be/vYL5odhxlVY", ytId: "vYL5odhxlVY", start:34 },
+            { s: "Let's Never…", t: "劃破夜空 似對我笑著<br>跨過大海 冷卻了憂傷<br>但也沒可救藥 未減退遐想", i: "思念是無藥可救的頑疾。即便時間冷卻了傷口，那些關於你的遐想依然會隨星光不期而至。", u: "https://youtu.be/vYL5odhxlVY", ytId: "vYL5odhxlVY", start:40 },
+            { s: "Let's Never…", t: "即使折磨拖垮着我<br>不想略過忘記當初", i: "痛苦也是記憶的一部分。與其優雅地忘記，我寧願狼狽地記住，記住我們那時最熾熱的模樣。", u: "https://youtu.be/vYL5odhxlVY", ytId: "vYL5odhxlVY", start:72 },
+            { s: "永夜漂流", t: "若愛 會永遠不動搖<br>但你 在力證它可笑<br>猶如步過用完的斷橋", i: "承諾就像那座斷橋，走過去了才發現搖搖欲墜，不可維繫。", u: "https://youtu.be/puK8ivwAoog", ytId: "puK8ivwAoog", start:42 },
+            { s: "永夜漂流", t: "關起雙眼奢想已久<br>失憶好過身體消瘦<br>欺騙 所有<br>I hope you'll be fine", i: "哪怕是矛盾得自欺欺人，我願意用一切去昧著受傷的真心，為暫時送上放手的祝福。", u: "https://youtu.be/puK8ivwAoog", ytId: "puK8ivwAoog", start:83 },
+            { s: "永夜漂流", t: "I hope you'll be fine<br>Good night", i: "最溫柔的殘酷，莫過於在斷聯前那句客氣的祝願。晚安，是在這個黑夜裡我能給你最後的愛。", u: "https://youtu.be/puK8ivwAoog", ytId: "puK8ivwAoog", start:93 },
+            { s: "永夜漂流", t: "黑暗 會代我撫慰寂寥<br>光線 長期為你下調", i: "既然光線太刺眼，不如躲進黑暗，讓那些陳年舊事隨夜息沉沒。", u: "https://youtu.be/puK8ivwAoog", ytId: "puK8ivwAoog", start:113 },
+            { s: "永夜漂流", t: "膚淺的愛奢想永久<br>只得一個傷得深厚<br>不算 罕有", i: "在这个流行快餐式情感的時代，深情反而成了一種負擔。我只是剛好成為了那個受傷的人。", u: "https://youtu.be/puK8ivwAoog", ytId: "puK8ivwAoog", start:194 },
+            { s: "Dreamer", t: "若是摘那星星太遙遠<br>捉緊你手從未棄權", i: "夢想可以很宏大，也可以很具體。比起那顆遙不可及的星，我更在意手心裡的那份溫暖。", u: "https://youtu.be/tbQkwoPkuYE", ytId: "tbQkwoPkuYE", start:128 },
+            { s: "Dreamer", t: "(I’ll be a) Dreamer<br>dreaming about you", i: "所有的白日夢裡都有你的存在。如果現實太沈重，那就讓我們在夢境裡無限期延長那份相會。", u: "https://youtu.be/tbQkwoPkuYE", ytId: "tbQkwoPkuYE", start:53 },
+            { s: "Dreamer", t: "萬大事你身邊起碼<br>我為你擋下", i: "在你最脆弱的時刻，我依然會為你擋下所有風霜。我不是什麼英雄，只是一個愛你的人。", u: "https://youtu.be/tbQkwoPkuYE", ytId: "tbQkwoPkuYE", start:83 },
+            { s: "DAY DAY BIRTHDAY", t: "Everyday 享受一起<br>重生地 歡呼 躍起<br>Celebrate Everyday", i: "只要和你在一起，每一分每一秒都是一場快樂慶典。", u: "https://youtu.be/m1CWHt_R9Jk", ytId: "m1CWHt_R9Jk", start:46 },
+            { s: "DAY DAY BIRTHDAY", t: "想就一起<br>隨意地 高歌 報喜", i: "快樂不需要挑日子。只要當下的心境對了，隨時隨地都能歡唱。", u: "https://youtu.be/m1CWHt_R9Jk", ytId: "m1CWHt_R9Jk", start:120 }
         ];
 
+        lyricsDB.forEach(item => {
+            if (!item.ytId) item.ytId = getYTIdFromUrl(item.u);
+            if (item.start === undefined) item.start = 0;
+        });
+
         const card = document.getElementById('main-card');
-
-const cardElement = document.getElementById('main-card');
-// --- 升級版：動態卡片深度 (支援滑鼠與手機滑動) ---
-        const cardElement = document.getElementById('main-card');
-
-        // 獨立出傾斜運算邏輯
-        function handleTilt(clientX, clientY) {
-            if (!card.classList.contains('revealed')) return;
-            const { innerWidth, innerHeight } = window;
-            
-            // 注意：這裡改回 -0.5，才能讓中心點為 0 度，否則卡片會一直偏一邊
-            const rotateX = ((clientY / innerHeight) - 0.5) * -10;
-            const rotateY = ((clientX / innerWidth) - 0.5) * 10;
-            
-            cardElement.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        }
-
-        // 恢復平整邏輯
-        function resetTilt() {
-            cardElement.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`;
-        }
-
-        // 1. 電腦端：滑鼠移動與離開
-        document.addEventListener('mousemove', (e) => handleTilt(e.clientX, e.clientY));
-        document.addEventListener('mouseleave', resetTilt);
-
-        // 2. 手機端：手指在螢幕上滑動 (touchmove)
-        document.addEventListener('touchmove', (e) => {
-            // 只有單指滑動時才傾斜，純點按不會觸發
-            if (e.touches.length === 1) {
-                handleTilt(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }, { passive: true });
-
-        // 手機端：手指離開螢幕時恢復平整
-        document.addEventListener('touchend', resetTilt);
-
         const placeholder = document.getElementById('placeholder');
         const lDisp = document.getElementById('lyrics-display');
         const sDisp = document.getElementById('song-display');
@@ -446,66 +490,10 @@ const cardElement = document.getElementById('main-card');
         const load = document.getElementById('loading');
         const downloadBtn = document.getElementById('download-btn');
         const toast = document.getElementById('toast');
+        const muteBtn = document.getElementById('mute-btn');
         
         let current = null;
-// --- 音樂核心控制 ---
-        const imgVoiceIn = "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAADXElEQVR4nO2dS0hUURjHf0NTS9NMK8uHNoIuWrSptSwaSIsitYhIitSioIuIdS8iWpS0SIsIatGiIigpSIsiSIsWpS0itSgtWpS2iNTCvIdzS8cx08yZe889c878f+By78z9zvf97v8999yzS7FYDBMTE6WEECHYQYisRAiyEiHISoQgKxGCrEQIshIhyEqEICsRgqxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhB"; 
-        const imgVoiceOut = "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAABL0lEQVR4nO3bOxHAMBAEwX9E/k0pAsVl0pED4yAb5p7d93mY9wHwR8YisUgsEovEIrFILLP7uA9Yy1gkFolFYpFYJBaJRWI560vIIrFILLP9Vv4SskgsEovEIrFILBKLxHJ9CVkkFolFYpFYJBaJRWI5u5ewRSISS6SVSCOSSSSTRCSRSCSJSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRWGYH8UInI9XgWk0AAAAASUVORK5CYII=";
-        let player;
-        let isGlobalMuted = false;
-        let fadeInterval;
 
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('yt-player', {
-                height: '0', width: '0',
-                playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1 },
-                events: {
-                    'onReady': () => {
-                        const initial = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
-                        if(initial.ytId) player.cueVideoById(initial.ytId, initial.start || 0);
-                    }
-                }
-            });
-        }
-
-        function fadeVolume(targetVol, duration, callback) {
-            clearInterval(fadeInterval);
-            if (!player) return;
-            const startVol = player.getVolume();
-            const steps = 15;
-            const volStep = (targetVol - startVol) / steps;
-            let curStep = 0;
-            fadeInterval = setInterval(() => {
-                curStep++;
-                player.setVolume(startVol + (volStep * curStep));
-                if (curStep >= steps) {
-                    clearInterval(fadeInterval);
-                    if (callback) callback();
-                }
-            }, duration / steps);
-        }
-
-        // 音量按鈕點擊事件
-        document.getElementById('mute-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            isGlobalMuted = !isGlobalMuted;
-            const mIcon = document.getElementById('mute-icon');
-            const mBtn = document.getElementById('mute-btn');
-            
-            if (isGlobalMuted) {
-                if (player) player.setVolume(0);
-                mIcon.src = imgVoiceOut;
-                mBtn.classList.add('is-muted');
-            } else {
-                if (player) player.setVolume(40);
-                mIcon.src = imgVoiceIn;
-                mBtn.classList.remove('is-muted');
-            }
-        });
-
-        function triggerHaptic() { if ("vibrate" in navigator) navigator.vibrate(15); }
-
-        // --- 優化：獨立抽出「準備歌詞」的邏輯 ---
         function rollNextLyric() {
             current = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
             const charCount = current.t.replace(/<br>/g, '').length;
@@ -525,44 +513,154 @@ const cardElement = document.getElementById('main-card');
             sDisp.innerText = "《" + current.s + "》"; 
             iDisp.innerText = current.i;
             iDisp.scrollTop = 0;
+
+            if (isPlayerReady && current.ytId) {
+                player.cueVideoById({videoId: current.ytId, startSeconds: current.start});
+            }
         }
+        
+        
+
+        // ===== Youtube 控制器相關變數與函數 =====
+        let player;
+        let isPlayerReady = false;
+        let isMuted = true;
+        let fadeInterval;
+
+        // 2. 強化版預加載邏輯
+let loadedSongsCount = 0;
+const preloadTargets = lyricsDB.slice(0, 3); // 預連前三首
+
+function updateProgress(val) {
+    const fill = document.getElementById('init-progress');
+    fill.style.width = val + '%';
+    if(val >= 100) {
+        setTimeout(() => document.body.classList.add('ready'), 800);
+    }
+}
+
+// 0.1秒後背景粒子漸入
+setTimeout(() => {
+    canvas.style.opacity = "1";
+}, 100);
+        
+        // 優化：確保此全域函數定義在載入 API 之前
+        window.onYouTubeIframeAPIReady = function() {
+            updateProgress(40); 
+            player = new YT.Player('yt-player', {
+                height: '0',
+                width: '0',
+                // 重要修復：videoId 不能是空字串，我們塞入剛剛抽出的 ytId
+                videoId: preloadTargets[0].ytId, // 先連第一首 
+                playerVars: { 'autoplay': 0, 'controls': 0, 'playsinline': 1 },
+                events: {
+                    'onReady': (event) => { 
+                        isPlayerReady = true; 
+                        player.setVolume(0);
+		rollNextLyric();
+                        let p = 40;
+                const interval = setInterval(() => {
+                    p += 20;
+                    updateProgress(p);
+                    if(p >= 100) clearInterval(interval);
+                }, 800);
+                        
+                                                
+                        playerReadyStatus = true;
+                        updateProgress(90); 
+                        checkOverallReady();
+                    },
+                    // 加入錯誤處理，以防某首歌版權禁止嵌入而卡死載入
+                    'onError': (event) => {
+                        console.warn("Youtube Player Error:", event.data);
+                        playerReadyStatus = true; // 放行
+                        checkOverallReady();
+                    }
+                }
+            });
+        };
+
+        // 動態且非同步載入 YouTube Iframe API (推薦做法)
+        const ytScriptTag = document.createElement('script');
+        ytScriptTag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(ytScriptTag, firstScriptTag);
+
+        function fadeAudioIn() {
+            if (!isPlayerReady || isMuted) return;
+            clearInterval(fadeInterval);
+           
+            player.playVideo(); 
+            let vol = 0;
+            fadeInterval = setInterval(() => {
+                vol += 2; 
+                if (vol >= 100) {
+                    vol = 100;
+                    clearInterval(fadeInterval);
+                }
+                player.setVolume(vol);
+            }, 40); 
+        }
+
+        function fadeAudioOut() {
+            if (!isPlayerReady) return;
+            clearInterval(fadeInterval);
+            let vol = player.getVolume();
+            fadeInterval = setInterval(() => {
+                vol -= 25; 
+                if (vol <= 0) {
+                    vol = 0;
+                    player.pauseVideo(); 
+                    clearInterval(fadeInterval);
+                }
+                player.setVolume(vol);
+            }, 30); 
+        }
+
+        muteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isMuted = !isMuted;
+            muteBtn.innerText = isMuted ? '■' : '♪';
+            
+            // 因為按鈕只在歌詞頁出現，直接判斷是否要淡入或淡出聲音即可
+    if (isPlayerReady) {
+        if (isMuted) {
+            fadeAudioOut();
+        } else {
+            fadeAudioIn();
+        }
+    }
+});
+
+        function triggerHaptic() { if ("vibrate" in navigator) navigator.vibrate(15); }
 
         placeholder.addEventListener('click', (e) => {
             e.stopPropagation();
             if (card.classList.contains('revealed')) return;
             triggerHaptic();
             
-            // 如果一開始是空的（初始狀態），或者遇到異常，才在這裡抽一次
-            if (!current) {
-                rollNextLyric();
-            }
-            card.classList.add('revealed');// 播放音樂邏輯
-            if (player && current.ytId) {
-                player.loadVideoById({ videoId: current.ytId, startSeconds: current.start || 0 });
-                if (isGlobalMuted) {
-                    player.setVolume(0);
-                    player.playVideo();
-                } else {
-                    player.setVolume(0);
-                    player.playVideo();
-                    fadeVolume(40, 2000); // 2秒淡入
-                }
-            }
-        });
+            if (!current) rollNextLyric();
+            card.classList.add('revealed');
+
+		// 【修改】：顯示 Mute 按鈕，但不主動觸發 fadeAudioIn
+    muteBtn.classList.add('show');
+    
+    // 讓影片在背景無聲開播，這樣用戶一按解除靜音就能馬上聽到音樂
+    if (isPlayerReady) {
+        player.setVolume(0);
+        player.playVideo();
+    }
+});
 
         document.getElementById('reset-btn').addEventListener('click', (e) => {
-            // 音樂淡出停止並預載下一首
-            fadeVolume(0, 1000, () => {
-                if (player) player.stopVideo();
-                const next = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
-                if(next.ytId) player.cueVideoById(next.ytId, next.start || 0);
-            });
-e.stopPropagation(); 
-
-            // 1. 移除 revealed class，觸發 CSS 0.4秒平滑淡出退場動畫
+            e.stopPropagation(); 
             card.classList.remove('revealed');
-            
-            // 2. 趁機準備好抽新歌詞：等待退出動畫執行完畢（0.4秒），默默抽下一首歌，取代之前白屏清空的動作
+		// 【新增】：隱藏 Mute 按鈕並重置為靜音狀態
+    muteBtn.classList.remove('show');
+    isMuted = true;
+    muteBtn.innerText = '■';
+
+            fadeAudioOut();
             setTimeout(() => { 
                 rollNextLyric();
             }, 400);
@@ -635,7 +733,7 @@ e.stopPropagation();
                     const url = URL.createObjectURL(blob); 
                     const link = document.createElement('a'); 
                     link.href = url; 
-                    link.download = `Resonance_${current.s.substring(0,15)}.png`;
+                    link.download = `Resonance_${current.s.substring(0,16)}.png`;
                     
                     link.click(); showToast("已保存至相簿");
                 });
@@ -643,6 +741,21 @@ e.stopPropagation();
         });
 
         function showToast(msg) { toast.innerText = msg; toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 3000); }
+
+        // ===== 總進度監聽機制 =====
+        let fontsReadyStatus = false;
+        let playerReadyStatus = false;
+
+        function checkOverallReady() {
+            if (fontsReadyStatus && playerReadyStatus) {
+                updateProgress(100);
+                setTimeout(() => {
+                    document.body.classList.add('fonts-ready');
+                    const loader = document.getElementById('initial-loader');
+                    setTimeout(() => { loader.style.display = 'none'; }, 2000);
+                }, 400); 
+            }
+        }
 
         async function waitForFonts() {
             await document.fonts.ready;
@@ -662,120 +775,33 @@ e.stopPropagation();
         }
 
         waitForFonts().then(() => {
-            const loader = document.getElementById('initial-loader');
-            document.body.classList.add('fonts-ready');
-            loader.style.pointerEvents = 'none'
-            setTimeout(() => {
-                loader.style.opacity = '0';
-                loader.style.visibility = 'hidden';
-            }, 500); 
+            fontsReadyStatus = true;
+            updateProgress(50); 
+            checkOverallReady();
         });
 
-// --- 圖片代碼 (Base64) ---
-
-const imgVoiceIn = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAADXElEQVR4nO2dS0hUURjHf0NTS9NMK8uHNoIuWrSptSwaSIsitYhIitSioIuIdS8iWpS0SIsIatGiIigpSIsiSIsWpS0itSgtWpS2iNTCvIdzS8cx08yZe889c878f+By78z9zvf97v8999yzS7FYDBMTE6WEECHYQYisRAiyEiHISoQgKxGCrEQIshIhyEqEICsRgqxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhB";
-const imgVoiceOut = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAABL0lEQVR4nO3bOxHAMBAEwX9E/k0pAsVl0pED4yAb5p7d93mY9wHwR8YisUgsEovEIrFILLP7uA9Yy1gkFolFYpFYJBaJRWI560vIIrFILLP9Vv4SskgsEovEIrFILBKLxHJ9CVkkFolFYpFYJBaJRWI5u5ewRSISS6SVSCOSSSSTRCSRSCSJSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRSCKRWGYH8UInI9XgWk0AAAAASUVORK5CYII=";
-
-let player;
-let isGlobalMuted = false; // 全域記憶：是否靜音
-let fadeInterval;
-
-// 1. 初始化 YouTube 播放器
-function onYouTubeIframeAPIReady() {
-    player = new YT.Player('yt-player', {
-        height: '0', width: '0',
-        playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1 },
-        events: {
-            'onReady': () => {
-                // 初始預熱一首隨機歌曲
-                const initial = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
-                player.cueVideoById(initial.ytId, initial.start || 0);
+        // 縮短超時安全機制至 4.5 秒 (若網路異常強行解鎖)
+        setTimeout(() => {
+            if (!fontsReadyStatus || !playerReadyStatus) {
+                fontsReadyStatus = true;
+                playerReadyStatus = true;
+                updateProgress(100);
+                checkOverallReady();
             }
-        }
-    });
-}
+        }, 4500);
 
-// 2. 音量漸變控制 (Fade In / Out)
-function fadeVolume(targetVol, duration, callback) {
-    clearInterval(fadeInterval);
-    if (!player) return;
-    
-    let startVol = player.getVolume();
-    let steps = 20;
-    let volStep = (targetVol - startVol) / steps;
-    let curStep = 0;
+        // 阻止右鍵選單
+document.oncontextmenu = () => false;
 
-    fadeInterval = setInterval(() => {
-        curStep++;
-        player.setVolume(startVol + (volStep * curStep));
-        if (curStep >= steps) {
-            clearInterval(fadeInterval);
-            if (callback) callback();
-        }
-    }, duration / steps);
-}
-
-// 3. 音量按鈕切換邏輯
-const muteBtn = document.getElementById('mute-btn');
-const muteIcon = document.getElementById('mute-icon');
-
-muteBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    isGlobalMuted = !isGlobalMuted;
-    
-    if (isGlobalMuted) {
-        if (player) player.setVolume(0);
-        muteIcon.src = imgVoiceOut; // 切換至靜音圖示
-        muteBtn.classList.add('is-muted');
-    } else {
-        if (player) player.setVolume(40);
-        muteIcon.src = imgVoiceIn; // 切換至有聲圖示
-        muteBtn.classList.remove('is-muted');
+// 阻止 F12 和常見的開發者工具快捷鍵
+document.onkeydown = (e) => {
+    if (e.keyCode === 123 || 
+        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67))) {
+        return false;
     }
-});
-
-// 4. 修改原本的星星(placeholder)點擊事件
-placeholder.addEventListener('click', (e) => {
-    // ...這裡保留你原本的隨機抽歌與 revealed 動畫代碼...
-    
-    if (player && current.ytId) {
-        player.loadVideoById({
-            videoId: current.ytId,
-            startSeconds: current.start || 0
-        });
+};
         
-        if (isGlobalMuted) {
-            player.setVolume(0);
-            player.playVideo(); // 雖然靜音但要在後台跑，方便隨時取消靜音
-        } else {
-            player.setVolume(0);
-            player.playVideo();
-            fadeVolume(40, 2000); // 2秒淡入
-        }
-    }
-});
-
-// 5. 修改「再次共振」按鈕點擊事件
-document.getElementById('reset-btn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    
-    // 返回主頁時一律淡出停止
-    fadeVolume(0, 1000, () => {
-        if (player) player.stopVideo();
-        // 停止後立即預載下一首 (隱形預載)
-        const next = lyricsDB[Math.floor(Math.random()*lyricsDB.length)];
-        player.cueVideoById(next.ytId, next.start || 0);
-    });
-
-    // ...這裡保留你原本的卡片重置/隱藏代碼...
-    card.classList.remove('revealed');
-});
+console.log("%c停！別看我的原始碼，快去聽歌吧！", "color: blue; font-size: 30px; font-weight: bold;");
     </script>
-<div id="yt-player" style="display:none;"></div>
-
-<button class="mute-control" id="mute-btn">
-    <img id="mute-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAADXElEQVR4nO2dS0hUURjHf0NTS9NMK8uHNoIuWrSptSwaSIsitYhIitSioIuIdS8iWpS0SIsIatGiIigpSIsiSIsWpS0itSgtWpS2iNTCvIdzS8cx08yZe889c878f+By78z9zvf97v8999yzS7FYDBMTE6WEECHYQYisRAiyEiHISoQgKxGCrEQIshIhyEqEICsRgqxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhBiKxECLESIdhB" alt="Volume Control">
-</button>
-
 </body>
 </html>
