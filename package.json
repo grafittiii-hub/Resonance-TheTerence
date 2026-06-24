@@ -1,0 +1,25 @@
+{
+  "name": "resonance-the-terence",
+  "version": "1.0.0",
+  "description": "Resonance Lyrics - A lyrical journey",
+  "type": "module",
+  "scripts": {
+    "dev": "serve .",
+    "build": "echo 'Static site - no build needed'",
+    "lint": "echo 'No linting configured'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "lyrics",
+    "music",
+    "resonance"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/analytics": "^1.1.1"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
